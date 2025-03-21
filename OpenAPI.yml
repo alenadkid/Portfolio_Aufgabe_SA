@@ -1,0 +1,149 @@
+openapi: 3.0.0
+info:
+  title: Labyrinth Game API
+  description: Eine RESTful API für ein Labyrinth-Spiel auf einem 5x5-Feld (A1-E5)
+  version: 1.0.0
+
+paths:
+  /games:
+    post:
+      summary: Erstellt ein neues Spiel
+      responses:
+        "201":
+          description: Spiel erfolgreich erstellt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+
+  /games/{gameId}:
+    get:
+      summary: Ruft den aktuellen Spielstatus ab
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Aktueller Status des Spiels
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+        "404":
+          description: Spiel nicht gefunden
+    delete:
+      summary: Beendet das Spiel
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Spiel erfolgreich beendet
+        "404":
+          description: Spiel nicht gefunden
+
+  /games/{gameId}/moves:
+    post:
+      summary: Bewegt den Spieler in eine Richtung
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveRequest"
+      responses:
+        "201":
+          description: Bewegung erfolgreich
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoveResponse"
+        "400":
+          description: Ungültige Bewegung (z.B. außerhalb des Spielfelds, Spiel endet)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameOver"
+        "403":
+          description: Bewegung blockiert durch eine Wand
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlockedMove"
+
+components:
+  schemas:
+    GameState:
+      type: object
+      properties:
+        gameId:
+          type: integer
+          example: 1
+        position:
+          type: string
+          example: "A1"
+        status:
+          type: string
+          enum: [playing, failed, success]
+          example: "playing"
+        finished:
+          type: boolean
+          example: false
+
+    MoveRequest:
+      type: object
+      properties:
+        direction:
+          type: string
+          enum: [left, right, up, down]
+          example: "right"
+
+    MoveResponse:
+      type: object
+      properties:
+        moveId:
+          type: integer
+          example: 1
+        gameId:
+          type: integer
+          example: 1
+        positionBefore:
+          type: string
+          example: "A1"
+        positionAfter:
+          type: string
+          example: "A2"
+        direction:
+          type: string
+          enum: [left, right, up, down]
+          example: "right"
+        status:
+          type: string
+          enum: [success, blocked, invalid, goal_reached]
+          example: "goal_reached"
+
+    BlockedMove:
+      type: object
+      properties:
+        reason:
+          type: string
+          example: "Wall encountered, movement blocked"
+
+    GameOver:
+      type: object
+      properties:
+        reason:
+          type: string
+          example: "Out of bounds, game over"
