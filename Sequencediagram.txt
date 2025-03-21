@@ -1,0 +1,21 @@
+title Labyrinth Game Sequence Diagram
+
+
+actor Player
+participant Server
+
+Player->Server: post: create new game
+Server-->>Player: GameID
+
+loop until game ends
+    Player->Server: put(GameID, direction)
+    alt lands outside
+        Server-->>Player: game over (status: failed)
+    else if reaches goal (E5)
+        Server-->>Player: game over (status: succeed)
+    else if hits a wall
+        Server-->>Player: field blocked, stay in place
+    else valid move
+        Server-->>Player: move successful, update position
+    end
+end
